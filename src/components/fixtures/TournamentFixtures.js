@@ -122,8 +122,9 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                 </div>
 
                 <div className={styles.teams}>
-                    <div className={`${styles.team} ${match.team1_checked_in === true ? styles.checkedIn : ''
-                        }`}>
+                    <div className={`${styles.team} ${
+                        match.winner_team_id === match.team1_id ? styles.winner : ''
+                    } ${match.team1_checked_in === true ? styles.checkedIn : ''}`}>
                         <div className={styles.teamPlayers}>{match.team1_players}</div>
                         {match.team1_id && (
                             <div className={styles.teamId}>Team ID: {match.team1_id}</div>
@@ -131,8 +132,9 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                         <div className={styles.score}>{match.team1Score}</div>
                     </div>
                     <div className={styles.vs}>vs</div>
-                    <div className={`${styles.team} ${match.team2_checked_in === true ? styles.checkedIn : ''
-                        }`}>
+                    <div className={`${styles.team} ${
+                        match.winner_team_id === match.team2_id ? styles.winner : ''
+                    } ${match.team2_checked_in === true ? styles.checkedIn : ''}`}>
                         <div className={styles.teamPlayers}>{match.team2_players}</div>
                         {match.team2_id && (
                             <div className={styles.teamId}>Team ID: {match.team2_id}</div>
@@ -142,6 +144,11 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                 </div>
 
                 <div className={styles.matchInfo}>
+                    {match.outcome === 'walkover' && (
+                        <span className={`${styles.status} ${styles.walkover}`}>
+                            Walkover
+                        </span>
+                    )}
                     <span className={styles.pool}>Pool: {match.pool}</span>
                     <span className={styles.round}>{match.round_name}</span>
                     <span className={`${styles.status} ${styles[match.status]}`}>

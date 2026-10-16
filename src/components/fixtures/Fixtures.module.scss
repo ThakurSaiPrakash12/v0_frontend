@@ -343,6 +343,13 @@
         background-color: #f5f5f5;
         color: #666;
       }
+
+      &.walkover {
+        background-color: #ede7f6;
+        color: #5e35b1;
+        font-weight: 600;
+        border: 1px solid rgba(94, 53, 177, 0.2);
+      }
     }
   }
 }
@@ -400,6 +407,13 @@
   &.on-going {
     background-color: rgba(255, 152, 0, 0.15);
     color: #F57C00;
+  }
+
+  &.walkover {
+    background-color: #ede7f6;
+    color: #5e35b1;
+    font-weight: 600;
+    border: 1px solid rgba(94, 53, 177, 0.2);
   }
 }
 
