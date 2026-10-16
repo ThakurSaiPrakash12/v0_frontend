@@ -5,8 +5,8 @@ import { endpoints } from '@/store/urls';
 import { apiCall } from '@/store/utils';
 import toast from 'react-hot-toast';
 
-const BaseFixtures = ({ 
-    matches: externalMatches, 
+const BaseFixtures = ({
+    matches: externalMatches,
     tournamentId,
     totalRounds,
     showCourtInfo = false
@@ -22,7 +22,7 @@ const BaseFixtures = ({
             setMatches(externalMatches);
             return;
         }
-        
+
         if (tournamentId) {
             fetchMatches();
         }
@@ -40,7 +40,7 @@ const BaseFixtures = ({
         try {
             setLoading(true);
             const response = await apiCall(`${endpoints.getFixtures}?tournament_id=${tournamentId}`);
-            
+
             if (response && response.matches) {
                 const transformedData = transformMatchesData(response.matches);
                 setMatches(transformedData);
@@ -55,7 +55,7 @@ const BaseFixtures = ({
 
     const parseMatchResult = (result) => {
         if (!result) return { team1Score: 0, team2Score: 0 };
-        
+
         const scores = result.split('-').map(Number);
         return {
             team1Score: scores[0] || 0,
@@ -65,7 +65,7 @@ const BaseFixtures = ({
 
     const transformMatchesData = (matchesArray) => {
         const transformed = {};
-        
+
         matchesArray.forEach(match => {
             const roundId = match.round_id.toString();
             if (!transformed[roundId]) {
@@ -85,7 +85,8 @@ const BaseFixtures = ({
                 round_name: match.round_name || `Round ${match.round_id}`,
                 ...parseMatchResult(match.match_result),
                 status: match.match_status?.status || 'pending',
-                winner_team_id: match.match_status?.is_final ? match.match_status?.winner_team_id : null,
+                winner_team_id: match.match_status?.winner_team_id || null,
+                outcome: match.match_status?.outcome || null,
                 team1_id: match.team1?.team_id,
                 team2_id: match.team2?.team_id,
                 team1_checked_in: match.team1?.checked_in,
@@ -98,7 +99,7 @@ const BaseFixtures = ({
 
     const getFilteredMatches = () => {
         if (!matches || !selectedRound) return [];
-        
+
         const roundData = matches[selectedRound];
         if (!roundData?.pools) return [];
 
@@ -132,12 +133,12 @@ const BaseFixtures = ({
         loading,
         selectedRound,
         selectedPoolId,
+        setSelectedPoolId,
         selectedCourt,
         setSelectedCourt,
         getFilteredMatches,
         handleRoundClick,
         handlePoolClick,
-        fetchMatches
     };
 };
 

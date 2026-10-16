@@ -18,6 +18,8 @@ const MatchScreen = ({ tournamentId, matchId }) => {
     const [isModalOpen, setModalOpen] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [matchStatus, setMatchStatus] = useState(null);
+    const [showWalkoverModal, setShowWalkoverModal] = useState(false);
+    const [walkoverWinner, setWalkoverWinner] = useState("");
     const router = useRouter();
 
     const getScores = async () => {
@@ -34,13 +36,13 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                     tournament_id: tournamentId,
                 },
             });
-            
+
             if (!response) {
                 throw new Error("Failed to fetch match details");
             }
 
             setMatchStatus(response.status || 'pending');
-            
+
             if (response.status === 'completed') {
                 setShowStatusModal(true);
             } else if (response.status === 'pending') {
@@ -110,7 +112,7 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                 body: JSON.stringify(requestBody),
             });
 
-            const statusPromise = isFinal ? 
+            const statusPromise = isFinal ?
                 apiCall(`${endpoints.updateMatchStatus}/${matchId}`, {
                     method: "POST",
                     body: {
@@ -147,7 +149,7 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                 toast.success(resp.message);
                 formik.setFieldValue("team1Score", resp.team1_score);
                 formik.setFieldValue("team2Score", resp.team2_score);
-                
+
                 if (isFinal && resp.winner_team_id) {
                     setScoreData(prev => ({
                         ...prev,
@@ -155,7 +157,7 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                     }));
                     setMatchStatus('completed');
                 }
-                
+
                 if (isFinal) {
                     router.push(`/referee/${tournamentId}/matches`);
                 }
@@ -184,13 +186,55 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                     status: "on-going"
                 }
             });
-            
+
             setMatchStatus('on-going');
             setShowStatusModal(false);
             toast.success("Match started successfully");
         } catch (error) {
             console.error("Failed to start match:", error);
             toast.error(error.message || "Failed to start match");
+        }
+    };
+
+    const handleWalkover = async () => {
+        if (!walkoverWinner) {
+            toast.error("Please select the winning team");
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `${endpoints.getBaseUrl()}/matches/${matchId}/walkover`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        tournament_id: tournamentId,
+                        winner_team_id: walkoverWinner
+                    })
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to record Walkover");
+            }
+
+            setScoreData(prev => ({
+                ...prev,
+                winner_team_id: result.winner_team_id,
+                outcome: result.outcome,
+                status: result.status,
+                is_final: result.is_final
+            }));
+
+            setMatchStatus("completed");
+            setShowWalkoverModal(false);
+            toast.success("Walkover recorded successfully");
+            router.push(`/referee/${tournamentId}/matches`);
+        } catch (error) {
+            toast.error(error.message || "Failed to record Walkover");
         }
     };
 
@@ -256,8 +300,19 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                 </div>
 
                 <div className={stl.actions}>
-                    <button type="button" onClick={() => updateScore(false)}>Update</button>
-                    <button type="button" onClick={finalizeScore}>Final</button>
+                    <button type="button" onClick={() => updateScore(false)}>
+                        Update
+                    </button>
+                    <button type="button" onClick={finalizeScore}>
+                        Final
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setShowWalkoverModal(true)}
+                        disabled={matchStatus === "completed"}
+                    >
+                        Walkover
+                    </button>
                 </div>
             </form>
 
@@ -271,8 +326,56 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                 </div>
             )}
 
-            <Dialog 
-                open={showStatusModal} 
+            <Dialog
+                open={showWalkoverModal}
+                onClose={() => setShowWalkoverModal(false)}
+            >
+                <DialogTitle>Record Walkover</DialogTitle>
+                <DialogContent>
+                    <p>Select the team that wins by Walkover.</p>
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="walkoverWinner"
+                            value={scoreData.team1?.team_id}
+                            checked={walkoverWinner === scoreData.team1?.team_id}
+                            onChange={(e) => setWalkoverWinner(e.target.value)}
+                            disabled={!scoreData.team1?.team_id}
+                        />
+                        Team 1 — {scoreData.team1?.team_id || "Unknown"}
+                    </label>
+
+                    <br />
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="walkoverWinner"
+                            value={scoreData.team2?.team_id}
+                            checked={walkoverWinner === scoreData.team2?.team_id}
+                            onChange={(e) => setWalkoverWinner(e.target.value)}
+                            disabled={!scoreData.team2?.team_id}
+                        />
+                        Team 2 — {scoreData.team2?.team_id || "Unknown"}
+                    </label>
+                </DialogContent>
+
+                <DialogActions>
+                    <Button onClick={() => setShowWalkoverModal(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleWalkover}
+                        disabled={!walkoverWinner}
+                    >
+                        Confirm Walkover
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={showStatusModal}
                 onClose={handleBackToMatches}
             >
                 <DialogTitle>
@@ -286,21 +389,21 @@ const MatchScreen = ({ tournamentId, matchId }) => {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
                         onClick={handleBackToMatches}
                         style={{ color: '#F28C28' }}
                     >
                         Cancel
                     </Button>
                     {matchStatus === 'completed' ? (
-                        <Button 
+                        <Button
                             onClick={() => setShowStatusModal(false)}
                             style={{ color: '#4CAF50' }}
                         >
                             Override Score
                         </Button>
                     ) : (
-                        <Button 
+                        <Button
                             onClick={handleStartMatch}
                             style={{ color: '#4CAF50' }}
                         >
@@ -326,7 +429,7 @@ const TeamCard = ({ team, players = [], onScoreChange, onReset, formik, teamName
                 ))}
             </div>
         </div>
-        
+
         <TextField
             size="small"
             className={stl.score}
@@ -335,7 +438,7 @@ const TeamCard = ({ team, players = [], onScoreChange, onReset, formik, teamName
             error={Boolean(formik.errors[teamName])}
             helperText={formik.errors[teamName]}
         />
-        
+
         <div className={stl.scoreControls}>
             <button type="button" onClick={() => onScoreChange(1)}>+1</button>
             <button type="button" onClick={() => onScoreChange(-1)}>-1</button>

@@ -55,21 +55,24 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
         }
     }, [tournamentId]);
 
+
     const {
         matches,
         loading,
         selectedRound,
         selectedPoolId,
+        setSelectedPoolId,
         selectedCourt,
         setSelectedCourt,
         getFilteredMatches,
         handleRoundClick,
         handlePoolClick
-    } = BaseFixtures({ 
-        tournamentId, 
+    } = BaseFixtures({
+        tournamentId,
         totalRounds,
-        showCourtInfo: true 
+        showCourtInfo: true
     });
+
 
     const getAvailableCourts = () => {
         const courts = new Set();
@@ -107,7 +110,7 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
 
     const renderMatches = (matches = []) => {
         if (!Array.isArray(matches)) return null;
-        
+
         return matches.map((match) => (
             <div
                 key={match.match_id}
@@ -119,9 +122,8 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                 </div>
 
                 <div className={styles.teams}>
-                    <div className={`${styles.team} ${
-                        match.team1_checked_in === true ? styles.checkedIn : ''
-                    }`}>
+                    <div className={`${styles.team} ${match.team1_checked_in === true ? styles.checkedIn : ''
+                        }`}>
                         <div className={styles.teamPlayers}>{match.team1_players}</div>
                         {match.team1_id && (
                             <div className={styles.teamId}>Team ID: {match.team1_id}</div>
@@ -129,9 +131,8 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                         <div className={styles.score}>{match.team1Score}</div>
                     </div>
                     <div className={styles.vs}>vs</div>
-                    <div className={`${styles.team} ${
-                        match.team2_checked_in === true ? styles.checkedIn : ''
-                    }`}>
+                    <div className={`${styles.team} ${match.team2_checked_in === true ? styles.checkedIn : ''
+                        }`}>
                         <div className={styles.teamPlayers}>{match.team2_players}</div>
                         {match.team2_id && (
                             <div className={styles.teamId}>Team ID: {match.team2_id}</div>
@@ -189,12 +190,12 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                 <div className={styles.knockoutContainer}>
                     {knockoutMatches.length > 0 ? (
                         knockoutView === 'default' ? (
-                            <KnockoutBracket 
-                                matches={knockoutMatches} 
+                            <KnockoutBracket
+                                matches={knockoutMatches}
                             />
                         ) : (
-                            <KnockoutBracket2 
-                                matches={knockoutMatches} 
+                            <KnockoutBracket2
+                                matches={knockoutMatches}
                             />
                         )
                     ) : (
@@ -215,7 +216,7 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                                 >
                                     {roundData.round_name}
                                 </button>
-                        ))}
+                            ))}
                     </div>
 
                     {selectedRound && (
@@ -268,7 +269,7 @@ const TournamentFixtures = ({ tournamentId, totalRounds }) => {
                                             >
                                                 {poolId}
                                             </button>
-                                    ))}
+                                        ))}
                                 </div>
                             )}
 
